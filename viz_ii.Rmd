@@ -82,4 +82,91 @@ ggplot(weather_df, aes(x = tmin, y = tmax)) +
   theme_bw() +  # theme_bw will reset all theme options above
   theme(legend.position = "bottom") #if theme before theme_bw, it will not show up
 ```
+```{r}
+ggplot(weather_df, aes(x = date, y = tmax, color = name)) + 
+  geom_point() + # color in aes will work for all, color in geompoint will only work for the sperate.
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package"
+  ) + 
+  viridis::scale_color_viridis(
+    name = "Location", 
+    discrete = TRUE
+  ) + 
+  theme_bw() +  
+  theme(legend.position = "bottom")
+```
+
+## Arguement to `geom_*`
+```{r}
+centralpark_df = weather_df %>% filter(name == "CentralPark_NY")
+waikiki_df = weather_df %>% filter(name == "Waikiki_HA")
+
+ggplot(waikiki_df, aes(x = date, y = tmax, color = name)) +
+  geom_point() +
+  geom_line(data = centralpark_df)
+
+```
+
+## patchwork
+
+```{r}
+# why you need - patch several different plots together
+# why you dont need - when you making the same kind of plots
+# when you dont need, you repeat the same panals to different data, there is no need to repeat doing it with patchwork and combine them 
+ggplot(weather_df, aes(x = date, y = tmax, color = name)) + 
+  geom_point() + 
+  facet_grid(~name) +
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package"
+  ) + 
+  viridis::scale_color_viridis(
+    name = "Location", 
+    discrete = TRUE
+  ) + 
+  theme_bw() +  
+  theme(legend.position = "bottom")
+# when you need it
+
+devtools::install_github("thomasp85/patchwork")
+library(patchwork)
+tmax_tmin_p = ggplot(weather_df, aes(x = tmax, y = tmin, color = name)) + 
+  geom_point(alpha = .5) +
+  theme(legend.position = "none")
+
+prcp_dens_p = weather_df %>% 
+  filter(prcp > 0) %>% 
+  ggplot(aes(x = prcp, fill = name)) + 
+  geom_density(alpha = .5) + 
+  theme(legend.position = "none")
+
+tmax_date_p = ggplot(weather_df, aes(x = date, y = tmax, color = name)) + 
+  geom_point(alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  theme(legend.position = "bottom")
+
+(tmax_tmin_p + prcp_dens_p) / tmax_date_p
+
+# more example of patchwork
+library(ggplot2)
+library(patchwork)
+
+p1 <- ggplot(mtcars) + geom_point(aes(mpg, disp))
+p2 <- ggplot(mtcars) + geom_boxplot(aes(gear, disp, group = gear))
+
+p1 + p2
+
+ggplot(mtcars) +
+  geom_point(aes(mpg, disp)) +
+  ggplot(mtcars) + 
+  geom_boxplot(aes(gear, disp, group = gear))
+
+```
+
+
 
